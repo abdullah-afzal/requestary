@@ -1,0 +1,98 @@
+{
+  "name": "requestary",
+  "version": "0.1.0",
+  "description": "A powerful REST API testing extension for VS Code",
+  "main": "./out/extension.js",
+  "publisher": "yourname",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:requestary.sendRequest",
+    "onCommand:requestary.openRequestPanel",
+    "onCommand:requestary.newRequest",
+    "onCommand:requestary.clearRequests",
+    "onCommand:requestary.importCollection",
+    "onView:requestary.requestView"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "requestary.sendRequest",
+        "title": "Requestary: Send REST Request"
+      },
+      {
+        "command": "requestary.openRequestPanel",
+        "title": "Requestary: Open Request Panel"
+      },
+      {
+        "command": "requestary.newRequest",
+        "title": "Requestary: New Request",
+        "icon": {
+          "light": "media/add-light.svg",
+          "dark": "media/add-dark.svg"
+        }
+      },
+      {
+        "command": "requestary.clearRequests",
+        "title": "Requestary: Clear Request History"
+      },
+      {
+        "command": "requestary.importCollection",
+        "title": "Requestary: Import Collection"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "requestary",
+          "title": "Requestary",
+          "icon": "media/requestary-tab-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "requestary": [
+        {
+          "id": "requestary.requestView",
+          "name": "Requests",
+          "icon": "media/requestary-tab-icon.svg",
+          "contextualTitle": "Requestary"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "requestary.newRequest",
+          "when": "view == requestary.requestView",
+          "group": "navigation"
+        },
+        {
+          "command": "requestary.clearRequests",
+          "when": "view == requestary.requestView"
+        },
+        {
+          "command": "requestary.importCollection",
+          "when": "view == requestary.requestView"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "^18.x",
+    "typescript": "^5.x"
+  },
+  "dependencies": {
+    "axios": "^1.4.0"
+  }
+}
