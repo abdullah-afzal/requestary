@@ -4,10 +4,17 @@
   "description": "A powerful REST API testing extension for VS Code",
   "main": "./out/extension.js",
   "publisher": "Abdullah Afzal",
+  "author": {
+    "name": "Abdullah Afzal",
+    "email": "mr.abdullahafzal@gmail.com",
+    "url": "https://github.com/abdullah-afzal"
+  },
+  "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
+    "Testing",
     "Other"
   ],
   "activationEvents": [],
