@@ -3,15 +3,14 @@
   "version": "1.1.0",
   "description": "A powerful REST API testing extension for VS Code",
   "main": "./out/extension.js",
-  "publisher": "AbdullahAfzal",
+  "publisher": "Requestary",
   "author": {
-    "name": "Abdullah Afzal",
-    "email": "mr.abdullahafzal@gmail.com",
-    "url": "https://github.com/abdullah-afzal"
+    "name": "requestary",
+    "url": "https://github.com/requestary"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/abdullah-afzal/requestary"},
+    "url": "https://github.com/requestary/vscode-requestary.git"},
   "icon": "media/icon.png",
   "engines": {
     "vscode": "^1.80.0"

@@ -109,11 +109,3 @@ Install from the VS Code Extensions marketplace.
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-[Add your license information here]
-
-## Support
-
-[Add support contact or link to issues]
