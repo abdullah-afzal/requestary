@@ -3,34 +3,35 @@
   "version": "0.1.0",
   "description": "A powerful REST API testing extension for VS Code",
   "main": "./out/extension.js",
-  "publisher": "yourname",
+  "publisher": "Abdullah Afzal",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onCommand:requestary.sendRequest",
-    "onCommand:requestary.openRequestPanel",
-    "onCommand:requestary.newRequest",
-    "onCommand:requestary.clearRequests",
-    "onCommand:requestary.importCollection",
-    "onView:requestary.requestView"
-  ],
+  "activationEvents": [],
   "contributes": {
     "commands": [
       {
         "command": "requestary.sendRequest",
-        "title": "Requestary: Send REST Request"
+        "title": "Send Request",
+        "category": "Requestary"
       },
       {
         "command": "requestary.openRequestPanel",
-        "title": "Requestary: Open Request Panel"
+        "title": "Open Request Panel",
+        "category": "Requestary"
       },
       {
-        "command": "requestary.newRequest",
-        "title": "Requestary: New Request",
+        "command": "requestary.importCollection",
+        "title": "Import Collection",
+        "category": "Requestary"
+      },
+      {
+        "command": "requestary.downloadSampleCollection",
+        "title": "Download Sample Collection",
+        "category": "Requestary",
         "icon": {
           "light": "media/add-light.svg",
           "dark": "media/add-dark.svg"
@@ -38,11 +39,17 @@
       },
       {
         "command": "requestary.clearRequests",
-        "title": "Requestary: Clear Request History"
+        "title": "Clear Request History",
+        "category": "Requestary"
       },
       {
-        "command": "requestary.importCollection",
-        "title": "Requestary: Import Collection"
+        "command": "requestary.newRequest",
+        "title": "New Request",
+        "category": "Requestary",
+        "icon": {
+          "light": "media/add-light.svg",
+          "dark": "media/add-dark.svg"
+        }
       }
     ],
     "viewsContainers": {
@@ -78,6 +85,37 @@
         {
           "command": "requestary.importCollection",
           "when": "view == requestary.requestView"
+        },
+        {
+          "command": "requestary.downloadSampleCollection",
+          "when": "view == requestary.requestView"
+        }
+      ],
+      "view/context": [
+        {
+          "command": "requestary.downloadSampleCollection",
+          "when": "view == requestary.requestView",
+          "group": "navigation@2"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "requestary.sendRequest"
+        },
+        {
+          "command": "requestary.openRequestPanel"
+        },
+        {
+          "command": "requestary.importCollection"
+        },
+        {
+          "command": "requestary.downloadSampleCollection"
+        },
+        {
+          "command": "requestary.clearRequests"
+        },
+        {
+          "command": "requestary.newRequest"
         }
       ]
     }

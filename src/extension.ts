@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import axios, { Method, AxiosRequestConfig } from 'axios';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 // Request Collection Interface
 interface RequestCollection {
@@ -137,24 +138,82 @@ class RequestProvider implements vscode.TreeDataProvider<RequestItem> {
     importCollection(filePath: string) {
         try {
             const fileContent = fs.readFileSync(filePath, 'utf-8');
-            const importedCollection: RequestCollection = JSON.parse(fileContent);
+            const thunderCollection: {
+                collectionName?: string;
+                requests: Array<{
+                    _id?: string;
+                    name: string;
+                    method: string;
+                    url: string;
+                    headers?: Array<{
+                        name: string;
+                        value: string;
+                        isDisabled?: boolean;
+                    }> | { [key: string]: string };
+                    params?: Array<{
+                        name: string;
+                        value: string;
+                    }> | { [key: string]: string };
+                    body?: {
+                        type?: string;
+                        raw?: string;
+                        form?: any[];
+                    };
+                    auth?: {
+                        type: string;
+                        bearer?: string;
+                    };
+                }>;
+            } = JSON.parse(fileContent);
             
-            // Validate collection
-            if (!importedCollection.name || !Array.isArray(importedCollection.requests)) {
-                throw new Error('Invalid collection format');
-            }
+            // Convert Thunder Client collection to Requestary collection format
+            const importedCollection: RequestCollection = {
+                name: thunderCollection.collectionName || 'Imported Collection',
+                requests: thunderCollection.requests.map((req) => {
+                    // Convert headers from different possible formats
+                    const headers: { [key: string]: string } = {};
+                    
+                    // Handle array of headers
+                    if (Array.isArray(req.headers)) {
+                        req.headers
+                            .filter((header: any) => !header.isDisabled)
+                            .forEach((header: any) => {
+                                headers[header.name] = header.value.replace(/\{|\}/g, ''); // Remove curly braces
+                            });
+                    } 
+                    // Handle object of headers
+                    else if (typeof req.headers === 'object') {
+                        Object.entries(req.headers).forEach(([key, value]) => {
+                            headers[key] = String(value).replace(/\{|\}/g, '');
+                        });
+                    }
 
-            // Add unique IDs if not present
-            importedCollection.requests.forEach(req => {
-                if (!req.id) {
-                    req.id = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                }
-            });
+                    // Handle body conversion
+                    let body = undefined;
+                    if (req.body && req.body.raw) {
+                        body = req.body.raw;
+                    }
+
+                    return {
+                        id: req._id || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        name: req.name,
+                        method: req.method,
+                        url: req.url,
+                        headers: headers,
+                        body: body,
+                        auth: req.auth ? {
+                            type: req.auth.type === 'bearer' ? 'bearer' : 'none',
+                            token: req.auth.type === 'bearer' ? req.auth.bearer : undefined
+                        } : { type: 'none' }
+                    };
+                })
+            };
 
             this.addCollection(importedCollection);
             return true;
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to import collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error('Collection import error:', error);
             return false;
         }
     }
@@ -271,6 +330,10 @@ export function activate(context: vscode.ExtensionContext) {
             }
         );
 
+        // Set the icon for the panel
+        const iconPath = vscode.Uri.file(path.join(context.extensionPath, 'media', 'requestary-tab-icon.svg'));
+        panel.iconPath = iconPath;
+
         panel.webview.html = getWebviewContent();
 
         // Handle messages from the webview
@@ -365,6 +428,37 @@ export function activate(context: vscode.ExtensionContext) {
                             outputChannel.show();
                         }
                         break;
+                    
+                    case 'downloadSampleCollection':
+                        try {
+                            // Trigger the download sample collection command
+                            await vscode.commands.executeCommand('requestary.downloadSampleCollection');
+                        } catch (error) {
+                            vscode.window.showErrorMessage(`Failed to download sample collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                        }
+                        break;
+                    
+                    case 'importCollection':
+                        try {
+                            // Trigger the import collection command
+                            const fileUris = await vscode.window.showOpenDialog({
+                                canSelectMany: false,
+                                filters: {
+                                    'Collection Files': ['json']
+                                },
+                                title: 'Select Collection to Import'
+                            });
+
+                            if (fileUris && fileUris[0]) {
+                                const success = requestProvider.importCollection(fileUris[0].fsPath);
+                                if (success) {
+                                    vscode.window.showInformationMessage('Collection imported successfully!');
+                                }
+                            }
+                        } catch (error) {
+                            vscode.window.showErrorMessage(`Failed to import collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                        }
+                        break;
                 }
             },
             undefined,
@@ -400,6 +494,56 @@ export function activate(context: vscode.ExtensionContext) {
         requestProvider.clearRequests();
     });
 
+    // Register command to download sample collection
+    let disposableDownloadSampleCollection = vscode.commands.registerCommand('requestary.downloadSampleCollection', async () => {
+        try {
+            // Get user's home directory
+            const userHomeDir = process.env.HOME || process.env.USERPROFILE || os.homedir();
+            const defaultPath = path.join(userHomeDir, 'sample-requestary-collection.json');
+
+            // Prompt user to choose save location with a default in home directory
+            const saveUri = await vscode.window.showSaveDialog({
+                defaultUri: vscode.Uri.file(defaultPath),
+                filters: {
+                    'JSON Files': ['json']
+                },
+                title: 'Save Requestary Sample Collection'
+            });
+
+            if (saveUri) {
+                // Read the sample collection from the extension's path
+                const sampleCollectionPath = path.join(context.extensionPath, 'sample-collection.json');
+                
+                try {
+                    // Ensure directory exists
+                    const saveDir = path.dirname(saveUri.fsPath);
+                    fs.mkdirSync(saveDir, { recursive: true });
+
+                    // Copy file with proper permissions
+                    fs.copyFileSync(sampleCollectionPath, saveUri.fsPath, fs.constants.COPYFILE_EXCL);
+
+                    // Show success message with file path
+                    vscode.window.showInformationMessage(`Sample collection downloaded to: ${saveUri.fsPath}`);
+                } catch (writeError) {
+                    // More detailed error handling
+                    let errorMessage = 'Failed to save the file.';
+                    if (writeError instanceof Error) {
+                        if (writeError.message.includes('EACCES')) {
+                            errorMessage = 'Permission denied. Try selecting a different directory with write access.';
+                        } else if (writeError.message.includes('ENOSPC')) {
+                            errorMessage = 'No space left on the device.';
+                        }
+                    }
+                    vscode.window.showErrorMessage(errorMessage);
+                    console.error('Download error:', writeError);
+                }
+            }
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to download sample collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error('Sample collection download error:', error);
+        }
+    });
+
     // Add commands to subscriptions
     context.subscriptions.push(
         disposableCommandRequest, 
@@ -407,6 +551,7 @@ export function activate(context: vscode.ExtensionContext) {
         disposableNewRequest,
         disposableClearRequests,
         disposableImportCollection,
+        disposableDownloadSampleCollection,
         requestTreeView
     );
 }
@@ -665,6 +810,57 @@ function getWebviewContent() {
                 background-color: var(--input-bg);
                 color: var(--text-color);
                 border-radius: 4px;
+            }
+            .sample-collection-btn {
+                background-color: var(--button-bg);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                margin-top: 15px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                transition: background-color 0.2s ease;
+            }
+            .sample-collection-btn:hover {
+                background-color: var(--button-hover-bg);
+            }
+            .collection-actions {
+                display: flex;
+                gap: 10px;
+                margin-top: 15px;
+            }
+            .collection-dropdown {
+                flex-grow: 1;
+                padding: 10px;
+                border: 1px solid var(--input-border);
+                background-color: var(--input-bg);
+                color: var(--text-color);
+                border-radius: 4px;
+                appearance: none;
+                background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M1 4l5 5 5-5' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E");
+                background-repeat: no-repeat;
+                background-position: right 8px center;
+                cursor: pointer;
+            }
+            .collection-btn {
+                background-color: var(--button-bg);
+                color: white;
+                border: none;
+                padding: 10px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 10px;
+                transition: background-color 0.2s ease;
+            }
+            .collection-btn:hover {
+                background-color: var(--button-hover-bg);
             }
         </style>
     </head>
@@ -1093,6 +1289,32 @@ function getWebviewContent() {
                         responseDiv.textContent = 'Error: ' + message.error;
                         break;
                 }
+            });
+
+            // Collection actions
+            const collectionActionDropdown = document.getElementById('collectionAction');
+            const executeCollectionActionBtn = document.getElementById('executeCollectionAction');
+
+            executeCollectionActionBtn.addEventListener('click', () => {
+                const selectedAction = collectionActionDropdown.value;
+                
+                switch (selectedAction) {
+                    case 'download':
+                        vscode.postMessage({
+                            command: 'downloadSampleCollection'
+                        });
+                        break;
+                    case 'import':
+                        vscode.postMessage({
+                            command: 'importCollection'
+                        });
+                        break;
+                    default:
+                        vscode.window.showInformationMessage('Please select an action');
+                }
+
+                // Reset dropdown after action
+                collectionActionDropdown.selectedIndex = 0;
             });
         </script>
     </body>

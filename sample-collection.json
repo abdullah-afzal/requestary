@@ -1,0 +1,50 @@
+{
+    "name": "Sample Requestary Collection",
+    "requests": [
+        {
+            "id": "req_get_users",
+            "name": "Get Users",
+            "method": "GET",
+            "url": "https://api.example.com/users",
+            "headers": {
+                "Authorization": "Bearer sample_token_123",
+                "Accept": "application/json"
+            }
+        },
+        {
+            "id": "req_create_user",
+            "name": "Create User",
+            "method": "POST", 
+            "url": "https://api.example.com/users",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer sample_token_123"
+            },
+            "body": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"age\": 30\n}",
+            "auth": {
+                "type": "bearer",
+                "token": "sample_token_123"
+            }
+        },
+        {
+            "id": "req_update_user",
+            "name": "Update User",
+            "method": "PUT",
+            "url": "https://api.example.com/users/123",
+            "headers": {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer sample_token_123"
+            },
+            "body": "{\n  \"name\": \"John Smith\",\n  \"age\": 31\n}"
+        },
+        {
+            "id": "req_delete_user",
+            "name": "Delete User",
+            "method": "DELETE",
+            "url": "https://api.example.com/users/123",
+            "headers": {
+                "Authorization": "Bearer sample_token_123"
+            }
+        }
+    ]
+}
