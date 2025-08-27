@@ -8,7 +8,8 @@ Requestary is a VS Code extension for API testing and request management.
 
 Requestary supports importing collections from:
 - Thunder Client
-- Native Requestary format
+- Native Requestary format 
+- *POSTMAN is coming soon
 
 ### Sample Collection
 
@@ -81,31 +82,10 @@ Install from the VS Code Extensions marketplace.
 4. Enter the URL
 5. For methods like POST/PUT, enter the request body
 
-## Development
-
-### Prerequisites
-
-- Node.js
-- npm
-- Visual Studio Code
-
-### Setup
-
-1. Clone the repository
-2. Run `npm install`
-3. Press F5 to open a new VS Code window with the extension loaded
-
-### Building
-
-- `npm run compile`: Compile the extension
-- `npm run watch`: Watch and compile during development
-
-## Debugging
-
-- Use the "Run Extension" configuration in the Debug view
-- Set breakpoints in the source code
-- Press F5 to start debugging
-
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are always welcome! 🎉  
+
+- 🐛 [Report Issues](https://github.com/requestary/vscode-requestary/issues)  
+- 🔀 [Submit Pull Requests](https://github.com/requestary/vscode-requestary/pulls)
+
